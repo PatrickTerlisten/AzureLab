@@ -1,0 +1,51 @@
+# Login to Azure
+az login --tenant 626952bf-f97f-4ffb-8de5-72f66befa1b8
+
+# Create Resource Groups
+
+az group create --location westeurope --name rg-vnet-testing-westeurope-001
+az group create --location westeurope --name rg-storage-testing-westeurope-001
+az group create --location westeurope --name rg-vm-testing-westeurope-001
+
+# Create a network security group
+az network nsg create --name nsg-testing-westeurope-001 --resource-group rg-vnet-testing-westeurope-001 --location westeurope
+
+# Create a virtual network.
+az network vnet create --name vnet-testing-westeurope-001 --resource-group rg-vnet-testing-westeurope-001 --address-prefixes 192.168.40.0/24 192.168.41.0/24 --location westeurope
+
+# Create a subnet
+az network vnet subnet create --address-prefix 192.168.40.0/27 --name GatewaySubnet  --resource-group rg-vnet-testing-westeurope-001 --vnet-name vnet-testing-westeurope-001
+az network vnet subnet create --address-prefix 192.168.41.0/24 --name snet-vnet-testing-westeurope-001 --resource-group rg-vnet-testing-westeurope-001 --vnet-name vnet-testing-westeurope-001 --network-security-group nsg-testing-westeurope-001
+
+# Create a Public IP
+
+az network public-ip create --name pip-vgw-testing-westeurope-001 --resource-group rg-vnet-testing-westeurope-001 --sku Basic
+
+# Create Virtual Gateway
+
+az network vnet-gateway create --name vgw-testing-westeurope-001 --location westeurope --public-ip-address pip-vgw-testing-westeurope-001 --resource-group rg-vnet-testing-westeurope-001 --vnet vnet-testing-westeurope-001 --gateway-type VPN --sku Basic --vpn-type routebased
+
+# Create Local Gateway (VPN Endpoint)
+
+az network local-gateway create --name lgw-testing-westeurope-001 --resource-group rg-vnet-testing-westeurope-001 --local-address-prefixes 192.168.181.0/24 --gateway-ip-address 212.117.75.74 
+
+# Create VPN Connection
+
+az network vpn-connection create --name cn-lgw-testing-westeurope-001-to-vgw-testing-westeurope-001 --resource-group rg-vnet-testing-westeurope-001 --vnet-gateway1 vgw-testing-westeurope-001 --location westeurope --shared-key AzureSecurePassw0rd --local-gateway2 lgw-testing-westeurope-001
+
+# Create Storage Account for VMs
+
+az storage account create --name stvmdbgtestingwesteu001 --resource-group rg-storage-testing-westeurope-001 --location westeurope --sku Standard_LRS
+az storage account create --name stvmtestingwesteu001 --resource-group rg-storage-testing-westeurope-001 --location westeurope --sku Standard_LRS
+
+# Create VM
+
+az vm create --resource-group rg-vm-testing-westeurope-001 --name vm-dc-01 --size Standard_DS1_v2 --data-disk-sizes-gb 50 --os-disk-name vm-testing-dc-01-systemdisk --image MicrosoftWindowsServer:WindowsServer:2019-Datacenter:latest --admin-username adm-terlisten --admin-password AzureSecurePassw0rd --public-ip-address '""'  --private-ip-address 192.168.41.4 --subnet /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/virtualNetworks/vnet-testing-westeurope-001/subnets/snet-vnet-testing-westeurope-001 --nsg /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/networkSecurityGroups/nsg-testing-westeurope-001
+az vm create --resource-group rg-vm-testing-westeurope-001 --name vm-dc-02 --size Standard_DS1_v2 --data-disk-sizes-gb 50 --os-disk-name vm-testing-dc-02-systemdisk --image MicrosoftWindowsServer:WindowsServer:2019-Datacenter:latest --admin-username adm-terlisten --admin-password AzureSecurePassw0rd --public-ip-address '""'  --private-ip-address 192.168.41.5 --subnet /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/virtualNetworks/vnet-testing-westeurope-001/subnets/snet-vnet-testing-westeurope-001 --nsg /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/networkSecurityGroups/nsg-testing-westeurope-001
+az vm create --resource-group rg-vm-testing-westeurope-001 --name vm-file-01 --size Standard_DS1_v2 --data-disk-sizes-gb 50 --os-disk-name vm-file-01-systemdisk --image MicrosoftWindowsServer:WindowsServer:2019-Datacenter:latest --admin-username adm-terlisten --admin-password AzureSecurePassw0rd --public-ip-address '""'  --private-ip-address 192.168.41.7 --subnet /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/virtualNetworks/vnet-testing-westeurope-001/subnets/snet-vnet-testing-westeurope-001 --nsg /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/networkSecurityGroups/nsg-testing-westeurope-001
+az vm create --resource-group rg-vm-testing-westeurope-001 --name vm-mgmt-01 --size Standard_DS1_v2 --data-disk-sizes-gb 50 --os-disk-name vm-mgmt-01-systemdisk --image MicrosoftWindowsServer:WindowsServer:2019-Datacenter:latest --admin-username adm-terlisten --admin-password AzureSecurePassw0rd --public-ip-address '""'  --private-ip-address 192.168.41.7 --subnet /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/virtualNetworks/vnet-testing-westeurope-001/subnets/snet-vnet-testing-westeurope-001 --nsg /subscriptions/d1924863-cc16-4510-9a4b-a1664cba5bc8/resourceGroups/rg-vnet-testing-westeurope-001/providers/Microsoft.Network/networkSecurityGroups/nsg-testing-westeurope-001
+
+# Useful commands
+az network vnet show --resource-group rg-vnet-testing-westeurope-001 -n vnet-testing-westeurope-001  -o tsv --query id
+az network vnet subnet show --resource-group rg-vnet-testing-westeurope-001 --vnet-name vnet-testing-westeurope-001 --name snet-vnet-testing-westeurope-001 -o tsv --query id
+az network nsg show --resource-group rg-vnet-testing-westeurope-001 --name nsg-testing-westeurope-001 -o tsv --query id
